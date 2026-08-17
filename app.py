@@ -7,14 +7,21 @@ import requests
 st.set_page_config(page_title="全球資產動態戰情室", layout="wide", page_icon="🛡️")
 st.title("🛡️ 全球跨國資產動態戰情室 (Daily Dashboard)")
 
-# 2. 貼入第二階段取得的 API URL
+# 2. API URL
 API_URL = "https://script.google.com/macros/s/AKfycbzL4DygHMMAQUD9kNltumc3K9UKuwp7i3gC40bGqjJe_qWmMYN9ipksOdrvONyuC-a-/exec"
 
 @st.cache_data(ttl=1800)  # 每半小時自動更新快取
 def load_data():
     res = requests.get(API_URL)
-    df = pd.DataFrame(res.json())
-    df['現值TWD'] = pd.to_numeric(df['現值TWD'])
+    data = res.json()
+    df = pd.DataFrame(data)
+    
+    # 關鍵防護：將 #N/A、文字或空值安全轉為 0
+    df['現值TWD'] = pd.to_numeric(df['現值TWD'], errors='coerce').fillna(0)
+    df['股數'] = pd.to_numeric(df['股數'], errors='coerce').fillna(0)
+    
+    # 過濾無效資料
+    df = df[df['現值TWD'] > 0]
     return df
 
 try:
@@ -32,9 +39,9 @@ try:
     # 頂部戰情卡片
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("總資產現值 (TWD)", f"${total_nav:,.0f}")
-    col2.metric("股票配置比例", f"{(equity_nav/total_nav)*100:.1f}%")
-    col3.metric("固定收益比例", f"{(bond_nav/total_nav)*100:.1f}%")
-    col4.metric("股票-美股暴險", f"{(us_equity_nav/equity_nav)*100:.1f}%")
+    col2.metric("股票配置比例", f"{(equity_nav/total_nav)*100:.1f}%" if total_nav > 0 else "0%")
+    col3.metric("固定收益比例", f"{(bond_nav/total_nav)*100:.1f}%" if total_nav > 0 else "0%")
+    col4.metric("股票-美股暴險", f"{(us_equity_nav/equity_nav)*100:.1f}%" if equity_nav > 0 else "0%")
 
     st.markdown("---")
 
