@@ -14,20 +14,20 @@ API_URL = "https://script.google.com/macros/s/AKfycbzL4DygHMMAQUD9kNltumc3K9UKuw
 def load_data():
     res = requests.get(API_URL)
     df = pd.DataFrame(res.json())
-    df['現值 (TWD)'] = pd.to_numeric(df['現值 (TWD)'])
+    df['現值TWD'] = pd.to_numeric(df['現值TWD'])
     return df
 
 try:
     df = load_data()
 
     # 3. 核心 KPI 數據計算
-    total_nav = df['現值 (TWD)'].sum()
+    total_nav = df['現值TWD'].sum()
     equity_df = df[df['類別'] == '股票']
     bond_df = df[df['類別'] == '債券']
     
-    equity_nav = equity_df['現值 (TWD)'].sum()
-    bond_nav = bond_df['現值 (TWD)'].sum()
-    us_equity_nav = equity_df[equity_df['國家'] == 'US']['現值 (TWD)'].sum()
+    equity_nav = equity_df['現值TWD'].sum()
+    bond_nav = bond_df['現值TWD'].sum()
+    us_equity_nav = equity_df[equity_df['國家'] == 'US']['現值TWD'].sum()
 
     # 頂部戰情卡片
     col1, col2, col3, col4 = st.columns(4)
@@ -44,7 +44,7 @@ try:
     with c1:
         st.subheader("📊 大類資產配置比例")
         fig_asset = px.pie(
-            df, values='現值 (TWD)', names='類別', hole=0.45,
+            df, values='現值TWD', names='類別', hole=0.45,
             color_discrete_sequence=px.colors.qualitative.Bold
         )
         st.plotly_chart(fig_asset, use_container_width=True)
@@ -52,7 +52,7 @@ try:
     with c2:
         st.subheader("🌍 股票國家暴險 (National Exposure)")
         fig_geo = px.pie(
-            equity_df, values='現值 (TWD)', names='國家', hole=0.45,
+            equity_df, values='現值TWD', names='國家', hole=0.45,
             color_discrete_sequence=px.colors.qualitative.Pastel
         )
         st.plotly_chart(fig_geo, use_container_width=True)
@@ -60,7 +60,7 @@ try:
     # 5. 明細數據表
     st.markdown("---")
     st.subheader("🏦 各機構資產明細清單")
-    st.dataframe(df[['機構', '代碼', '名稱', '類別', '國家', '股數', '現值 (TWD)']], use_container_width=True)
+    st.dataframe(df[['機構', '代碼', '名稱', '類別', '國家', '股數', '現值TWD']], use_container_width=True)
 
 except Exception as e:
     st.error(f"資料連接失敗，請檢查 API URL 配置：{e}")
