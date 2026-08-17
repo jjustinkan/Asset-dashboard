@@ -8,7 +8,7 @@ st.set_page_config(page_title="全球資產動態戰情室", layout="wide", page
 st.title("🛡️ 全球跨國資產動態戰情室 (Daily Dashboard)")
 
 # 2. 請替換為您的 Apps Script 部署 URL
-API_URL = "https://script.google.com/macros/s/你的部署ID/exec"
+API_URL = "https://script.google.com/macros/s/AKfycbzL4DygHMMAQUD9kNltumc3K9UKuwp7i3gC40bGqjJe_qWmMYN9ipksOdrvONyuC-a-/exec"
 
 @st.cache_data(ttl=300)  # 設定 5 分鐘自動更新快取
 def load_data():
