@@ -7,7 +7,7 @@ import requests
 st.set_page_config(page_title="全球資產動態戰情室", layout="wide", page_icon="🛡️")
 st.title("🛡️ 全球跨國資產動態戰情室 (Daily Dashboard)")
 
-# 2. 請替換為您的 Apps Script 部署 URL
+# 2. API URL (請替換為您的 Apps Script 部署 URL)
 API_URL = "https://script.google.com/macros/s/AKfycbzL4DygHMMAQUD9kNltumc3K9UKuwp7i3gC40bGqjJe_qWmMYN9ipksOdrvONyuC-a-/exec"
 
 @st.cache_data(ttl=300)  # 設定 5 分鐘自動更新快取
@@ -16,7 +16,8 @@ def load_data():
     data = res.json()
     df = pd.DataFrame(data)
     
-    # 數據清洗：確保 '現值TWD' 為數字，非數字或空值自動轉為 0
+    # 數據清洗：確保數值解析正確
+    df['最新單價'] = pd.to_numeric(df['最新單價'], errors='coerce').fillna(0)
     df['現值TWD'] = pd.to_numeric(df['現值TWD'], errors='coerce').fillna(0)
     df['股數'] = pd.to_numeric(df['股數'], errors='coerce').fillna(0)
     
@@ -66,10 +67,19 @@ try:
         )
         st.plotly_chart(fig_geo, use_container_width=True)
 
-    # 5. 明細數據表
+    # 5. 明細數據表 (已加入 '最新單價' 欄位，並套用數字格式化)
     st.markdown("---")
     st.subheader("🏦 各機構資產明細清單")
-    st.dataframe(df[['機構', '代碼', '名稱', '類別', '國家', '股數', '現值TWD']], use_container_width=True)
+    
+    # 建立視覺化格式設定，將單價與現值補上千分位與小數點格式
+    st.dataframe(
+        df[['機構', '代碼', '名稱', '類別', '國家', '股數', '最新單價', '現值TWD']],
+        column_config={
+            "最新單價": st.column_config.NumberColumn("最新單價 (原幣/TWD)", format="%.2f"),
+            "現值TWD": st.column_config.NumberColumn("現值 (TWD)", format="$%d")
+        },
+        use_container_width=True
+    )
 
 except Exception as e:
     st.error(f"資料連接失敗，請檢查 API URL 配置與欄位結構：{e}")
